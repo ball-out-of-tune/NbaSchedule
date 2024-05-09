@@ -1,13 +1,16 @@
 package com.example.nbaschedule.data
 
+import android.graphics.drawable.Icon
+import androidx.annotation.DrawableRes
 import androidx.annotation.NonNull
+import androidx.annotation.StringRes
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 
 @Entity(tableName = "Schedule")
-data class BusSchedule(
+data class NbaSchedule(
     @PrimaryKey
     val id: Int,
 
@@ -27,5 +30,11 @@ data class BusSchedule(
     val awayTeamScore: Int,
 
     @ColumnInfo(name = "homeTeamScore")
-    val isFinished: Boolean
+    val isFinished: Boolean,
+
+    @DrawableRes
+    val homeTeamIcon: Int,
+
+    @DrawableRes
+    val awayTeamIcon: Int
 )
