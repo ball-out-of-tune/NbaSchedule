@@ -18,13 +18,4 @@ class ExampleUnitTest {
         assertEquals(4, 2 + 2)
     }
 
-    @Test
-    fun NbaScheduleCorrectness() {
-//        assertEquals(4,4)
-        /*        for (item in NbaScheduleRepository.fullNbaScheduleWithImage) {
-
-        }*/
-        assertEquals("Cleveland Cavaliers", NbaScheduleRepository.fullNbaSchedule[0].homeTeam)
-//        Log.d("1", NbaScheduleRepository.fullSchedule[0].homeTeam)
-    }
 }

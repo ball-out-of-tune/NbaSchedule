@@ -6,9 +6,11 @@ import androidx.annotation.DrawableRes
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.nbaschedule.NbaScheduleApplication
 import com.example.nbaschedule.NbaScheduleViewModel
+import com.example.nbaschedule.R
 import com.example.nbaschedule.data.NbaScheduleRepository.fullNbaSchedule
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.runBlocking
+import kotlin.math.truncate
 
 object NbaScheduleRepository {
     val application = NbaScheduleApplication()
@@ -20,6 +22,8 @@ object NbaScheduleRepository {
 
 data class NbaScheduleWithImage(
     val id: Int,
+
+    val matchDate: String,
 
     val matchTime: String,
 
@@ -40,6 +44,8 @@ data class NbaScheduleWithImage(
     val awayTeamIcon: Int
 )
 
+
+
 suspend fun convertFlowToList(flow: Flow<List<NbaSchedule>>): List<NbaSchedule> {
     val resultList = mutableListOf<NbaSchedule>()
     flow.collect { list ->
@@ -54,6 +60,7 @@ fun convert(fullSchedule: Flow<List<NbaSchedule>>) = runBlocking {
 
 fun NbaSchedule.toNbaScheduleWithImage(): NbaScheduleWithImage = NbaScheduleWithImage(
     id = id,
+    matchDate = "",
     matchTime = matchTime,
     homeTeam = homeTeam,
     awayTeam = awayTeam,

@@ -1,8 +1,6 @@
 package com.example.nbaschedule
 
 import android.content.res.Configuration
-import android.media.Image
-import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -16,29 +14,37 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.room.ColumnInfo
-import androidx.room.PrimaryKey
-import com.example.nbaschedule.data.NbaSchedule
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.ui.semantics.Role.Companion.Image
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import com.example.nbaschedule.data.NbaScheduleRepository
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
+
+
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.Divider
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import com.example.compose.AppTheme
+import com.example.nbaschedule.data.NbaScheduleWithImage
+import kotlinx.coroutines.launch
+import com.example.nbaschedule.data.ScheduleRepository
 
 enum class NbaScheduleScreens {
     FullSchedule,
@@ -51,73 +57,87 @@ fun NbaScheduleApp(
     viewModel: NbaScheduleViewModel = viewModel(factory = NbaScheduleViewModel.factory)
 ) {
     val navController = rememberNavController()
-
     val fullSchedule by viewModel.getFullSchedule().collectAsState(emptyList())
-
     Scaffold(
         topBar = {
-
+            scheduleTopAppBar()
         }
     ) {
         innerPadding ->
-        println(innerPadding)
-
+        TeamScheduleList(
+            schedule = ScheduleRepository.nbaSchedules,
+            contentPadding = innerPadding
+        )
     }
 }
 
 @Composable
-fun FullScheduleScreen(
-
-) {
-
-}
-
-@Composable
-fun NbaScheduleScreen(
-    nbaSchedules: List<NbaSchedule>,
-    modifier: Modifier = Modifier,
-
-) {
-}
-
-
-@Composable
 fun TeamScheduleList(
-    schedule: List<NbaSchedule>,
+    schedule: List<NbaScheduleWithImage> = ScheduleRepository.nbaSchedules,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(0.dp),
     ) {
+    lateinit var date: String
+    val listState = rememberLazyListState()
+// Remember a CoroutineScope to be able to launch
+    val coroutineScope = rememberCoroutineScope()
     LazyColumn(
         modifier = modifier,
         contentPadding = contentPadding,
     ) {
-        this.items(
-            items = schedule,
-            key = {schedule -> schedule.id}
+        itemsIndexed(
+            items = schedule
+        ) {index, scheduleItem ->
+            if (index == 0 || scheduleItem.matchDate != date) {
+                DateBar(scheduleItem)
+            }
+            date = scheduleItem.matchDate
+            TeamScheduleItem(
+                singleSchedule = scheduleItem,
+                modifier = Modifier
+            )
+        }
+    }
+    Box(modifier = Modifier.fillMaxSize()) {
+        FloatingActionButton(
+            onClick = {
+                coroutineScope.launch {
+                    // Animate scroll to the first item
+                    listState.animateScrollToItem(index = 0)
+                }
+            },
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(
+                    bottom = 8.dp,
+                    end = 8.dp
+                )
         ) {
-
+            Text(text = "Click")
         }
     }
 }
 
 @Composable
 fun TeamScheduleItem(
-    singleSchedule: NbaSchedule,
+    singleSchedule: NbaScheduleWithImage,
     modifier: Modifier = Modifier
 ) {
     Card(
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        modifier = modifier,
+        modifier = modifier.padding(4.dp),
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(4.dp)
                 .sizeIn(minHeight = 72.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment =  Alignment.CenterVertically
         ) {
             Column(
-                verticalArrangement = Arrangement.SpaceBetween
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
                     text = singleSchedule.matchTime,
@@ -129,10 +149,15 @@ fun TeamScheduleItem(
                 )
             }
 
-            Column() {
+            Column(
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
                 val homeTeamIconId = detectTeamIcon(singleSchedule.homeTeam)
                 val awayTeamIconId = detectTeamIcon(singleSchedule.awayTeam)
-                Row {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Image(painter = painterResource(id = homeTeamIconId),
                         contentDescription = "",
                         modifier = modifier.sizeIn(
@@ -144,14 +169,16 @@ fun TeamScheduleItem(
                     )
                     Text(text = singleSchedule.awayTeam)
                 }
-                Row() {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Image(painter = painterResource(id = awayTeamIconId),
                         contentDescription = "",
                         modifier = modifier.sizeIn(
-                            minHeight = 12.dp,
-                            minWidth = 16.dp,
-                            maxHeight = 16.dp,
-                            maxWidth = 20.dp
+                            minHeight = 20.dp,
+                            minWidth = 20.dp,
+                            maxHeight = 28.dp,
+                            maxWidth = 28.dp
                         )
                     )
                     Text(text = singleSchedule.homeTeam)
@@ -159,17 +186,144 @@ fun TeamScheduleItem(
 
 
             }
+            if( singleSchedule.isFinished) {
+                Column() {
+                    Text(text = singleSchedule.homeTeamScore.toString())
+                    Text(text = singleSchedule.awayTeamScore.toString())
+                }
+            } else {
+                Column() {
+                    Text(text = "--")
+                    Text(text = "--")
+                }
+            }
+
+            if (singleSchedule.isFinished) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(text = "已结束")
+                }
+            } else {
+                Column {
+                    Text(text = "未开始")
+                }
+            }
         }
     }
+}
+
+@Composable
+fun DateBar(
+    singleSchedule: NbaScheduleWithImage
+) {
+    if (singleSchedule.id != 1) {
+        Divider(
+            color = Color.Black,
+            thickness = 1.dp,
+            modifier = Modifier
+                .padding(
+                    start = 1.dp,
+                    end = 1.dp
+                )
+        )
+    }
+    Card() {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .sizeIn(maxHeight = 20.dp)
+        ) {
+            Text(text = singleSchedule.matchDate.toString())
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun scheduleTopAppBar(modifier: Modifier = Modifier) {
+    TopAppBar(
+        title = {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Image(
+                    modifier = Modifier
+                        .size(
+                            width = 4.dp,
+                            height = 8.dp
+                        )
+                        .padding(2.dp),
+                    painter = painterResource(R.drawable.nba),
+                    // Content Description is not needed here - image is decorative, and setting a
+                    // null content description allows accessibility services to skip this element
+                    // during navigation.
+
+                    contentDescription = "NBA logo"
+                )
+                Text(
+                    text = stringResource(R.string.app_name),
+                    style = MaterialTheme.typography.displayLarge
+                )
+            }
+        },
+        modifier = modifier
+    )
+}
+
+val teamList = listOf(
+    "Cleveland Cavaliers", "Orlando Magic", "Minnesota Timberwolves", "Phoenix Suns",
+    "New York Knicks", "Philadelphia 76ers", "Denver Nuggets", "Los Angeles Lakers",
+    "Boston Celtics", "Miami Heat", "LA Clippers", "Dallas Mavericks",
+    "Milwaukee Bucks", "Indiana Pacers", "Oklahoma City Thunder", "New Orleans Pelicans"
+)
+
+fun detectTeamIcon(ateam: String): Int {
+    if (ateam == "Cleveland Cavaliers" )
+        return R.drawable.cle
+    else if (ateam == "Orlando Magic")
+        return R.drawable.orl
+    else if (ateam == "Minnesota Timberwolves")
+        return R.drawable.min
+    else if (ateam == "Phoenix Suns")
+        return R.drawable.phx
+    else if (ateam == "New York Knicks")
+        return R.drawable.nyk
+    else if (ateam == "Philadelphia 76ers")
+        return R.drawable.phi
+    else if (ateam == "Denver Nuggets")
+        return R.drawable.den
+    else if (ateam == "Los Angeles Lakers")
+        return R.drawable.lal
+    else if (ateam == "Boston Celtics")
+        return R.drawable.bos
+    else if (ateam == "Miami Heat")
+        return R.drawable.mia
+    else if (ateam == "Oklahoma City Thunder")
+        return R.drawable.okc
+    else if (ateam == "New Orleans Pelicans")
+        return R.drawable.nol
+    else if (ateam == "LA Clippers")
+        return R.drawable.lac
+    else if (ateam == "Dallas Mavericks")
+        return R.drawable.dal
+    else if (ateam == "Milwaukee Bucks")
+        return R.drawable.mil
+    else if (ateam == "Indiana Pacers")
+        return R.drawable.ind
+    else
+        return 0
 }
 
 
 @Preview("Dark Theme", uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-fun HeroPreview() {
-    val oneSingleGame = NbaSchedule(
+fun HeroItemPreview() {
+    val oneSingleGame = NbaScheduleWithImage(
         1,
-        "2024-4-21 01:00",
+        "2024-4-21",
+        "01:00",
         "Cleveland Cavaliers",
         "Orlando Magic",
         97,
@@ -186,67 +340,28 @@ fun HeroPreview() {
     }
 }
 
-/*@Preview
+@Preview
 @Composable
 fun HeroesPreview() {
-    SuperheroesTheme(darkTheme = false) {
+    AppTheme(darkTheme = false) {
         Surface(
             color = MaterialTheme.colorScheme.background
         ) {
-            *//* Important: It is not a good practice to access data source directly from the UI.
-            In later units you will learn how to use ViewModel in such scenarios that takes the
-            data source as a dependency and exposes heroes.
-            *//*
-            HeroesList(heroes = HeroesRepository.heroes)
+            TeamScheduleList(schedule = ScheduleRepository.nbaSchedules)
         }
     }
-}*/
-
-
-val teamList = listOf(
-    "Cleveland Cavaliers", "Orlando Magic", "Minnesota Timberwolves", "Phoenix Suns",
-    "New York Knicks", "Philadelphia 76ers", "Denver Nuggets", "Los Angeles Lakers",
-    "Boston Celtics", "Miami Heat", "LA Clippers", "Dallas Mavericks",
-    "Milwaukee Bucks", "Indiana Pacers", "Oklahoma City Thunder", "New Orleans Pelicans"
-)
-
-fun detectTeamIcon(ateam: String): Int {
-        if (ateam == "Cleveland Cavaliers" )
-            return R.drawable.cle
-        else if (ateam == "Orlando Magic")
-            return R.drawable.orl
-        else if (ateam == "Minnesota Timberwolves")
-            return R.drawable.min
-        else if (ateam == "Phoenix Suns")
-            return R.drawable.phx
-        else if (ateam == "New York Knicks")
-            return R.drawable.nyk
-        else if (ateam == "Philadelphia 76ers")
-            return R.drawable.phi
-        else if (ateam == "Denver Nuggets")
-            return R.drawable.den
-        else if (ateam == "Los Angeles Lakers")
-            return R.drawable.lal
-        else if (ateam == "Boston Celtics")
-            return R.drawable.bos
-        else if (ateam == "Miami Heat")
-            return R.drawable.mia
-        else if (ateam == "Oklahoma City Thunder")
-            return R.drawable.okc
-        else if (ateam == "New Orleans Pelicans")
-            return R.drawable.nol
-        else if (ateam == "LA Clippers")
-            return R.drawable.lac
-        else if (ateam == "Dallas Mavericks")
-            return R.drawable.dal
-        else if (ateam == "Milwaukee Bucks")
-            return R.drawable.mil
-        else if (ateam == "Indiana Pacers")
-            return R.drawable.ind
-        else
-            return 0
 }
 
-fun returnTeamIcon() {
-
+@Preview
+@Composable
+fun ScheduleScreenPreview() {
+    AppTheme(darkTheme = false) {
+        Surface(
+            color = MaterialTheme.colorScheme.background
+        ) {
+            NbaScheduleApp()
+        }
+    }
 }
+
+
