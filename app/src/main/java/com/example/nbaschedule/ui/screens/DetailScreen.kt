@@ -93,8 +93,8 @@ fun DetailScreen(
 //                Divider()
                 Button(
                     onClick = {
-                              if(player != match.guestPlayer)
-                                  player = match.guestPlayer
+                              if(player != match.homePlayer)
+                                  player = match.homePlayer
                               },
                     modifier = Modifier.weight(0.4f),
                     shape = RoundedCornerShape(12.dp)
@@ -305,7 +305,7 @@ fun PlayerDataItem(singlePlayer: PlayerData) {
     }
 }
 
-/*@Preview
+@Preview
 @Composable
 fun DetailScreenPreview() {
     val nbaScheduleWithImage = NbaScheduleWithImage(
@@ -341,7 +341,7 @@ fun DetailScreenPreview() {
         nbaScheduleWithImage = nbaScheduleWithImage,
         match = match
     )
-}*/
+}
 
 /*
 @Preview

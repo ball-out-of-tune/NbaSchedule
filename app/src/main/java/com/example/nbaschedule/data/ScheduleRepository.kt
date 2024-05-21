@@ -466,11 +466,11 @@ object PlayerDataList {
                 PlayerData("Max Strus", "32:42",7 ,9 , 1, 1, 0),
             ),
             guestPlayer = listOf<PlayerData>(
-                PlayerData("Jonathan Issac", "",10, 5, 1, 3, 3),
-                PlayerData("Paolo Banchero", "",24 ,7, 5, 0, 0),
-                PlayerData("Jalen Suggs", "",13, 4, 4, 2, 1),
-                PlayerData("Franz Wagner", "",18, 7, 3,1,3),
-                PlayerData("Markell Fultz", "",0 ,3, 1, 0 ,0),
+                PlayerData("Jonathan Issac", "28:40",10, 5, 1, 3, 3),
+                PlayerData("Paolo Banchero", "41:15",24 ,7, 5, 0, 0),
+                PlayerData("Jalen Suggs", "32:42",13, 4, 4, 2, 1),
+                PlayerData("Franz Wagner", "37:33",18, 7, 3,1,3),
+                PlayerData("Markell Fultz", "12:49",0 ,3, 1, 0 ,0),
             )
         ),
     )
