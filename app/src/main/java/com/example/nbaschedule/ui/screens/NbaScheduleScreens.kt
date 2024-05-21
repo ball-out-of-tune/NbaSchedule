@@ -1,7 +1,8 @@
-package com.example.nbaschedule
+package com.example.nbaschedule.ui.screens
 
 import android.content.res.Configuration
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -41,34 +42,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.navigation.NavController
 import com.example.compose.AppTheme
+import com.example.nbaschedule.R
 import com.example.nbaschedule.data.NbaScheduleWithImage
 import kotlinx.coroutines.launch
 import com.example.nbaschedule.data.ScheduleRepository
+import com.example.nbaschedule.data.toNbaScheduleWithImage
 
 enum class NbaScheduleScreens {
     FullSchedule,
     PlayerStat
-}
-
-
-@Composable
-fun NbaScheduleApp(
-    viewModel: NbaScheduleViewModel = viewModel(factory = NbaScheduleViewModel.factory)
-) {
-    val navController = rememberNavController()
-    val fullSchedule by viewModel.getFullSchedule().collectAsState(emptyList())
-    Scaffold(
-        topBar = {
-            scheduleTopAppBar()
-        }
-    ) {
-        innerPadding ->
-        TeamScheduleList(
-            schedule = ScheduleRepository.nbaSchedules,
-            contentPadding = innerPadding
-        )
-    }
 }
 
 @Composable
@@ -76,7 +60,8 @@ fun TeamScheduleList(
     schedule: List<NbaScheduleWithImage> = ScheduleRepository.nbaSchedules,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(0.dp),
-    ) {
+    navController: NavController = rememberNavController()
+) {
     lateinit var date: String
     val listState = rememberLazyListState()
 // Remember a CoroutineScope to be able to launch
@@ -94,7 +79,8 @@ fun TeamScheduleList(
             date = scheduleItem.matchDate
             TeamScheduleItem(
                 singleSchedule = scheduleItem,
-                modifier = Modifier
+                modifier = Modifier,
+                onClick = {navController.navigate("Detail/${scheduleItem.id}")}
             )
         }
     }
@@ -121,11 +107,14 @@ fun TeamScheduleList(
 @Composable
 fun TeamScheduleItem(
     singleSchedule: NbaScheduleWithImage,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
 ) {
     Card(
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        modifier = modifier.padding(4.dp),
+        modifier = modifier
+            .padding(4.dp)
+            .clickable { onClick() },
     ) {
         Row(
             modifier = Modifier
@@ -272,6 +261,7 @@ fun scheduleTopAppBar(modifier: Modifier = Modifier) {
     )
 }
 
+//这个list暂时应该没用
 val teamList = listOf(
     "Cleveland Cavaliers", "Orlando Magic", "Minnesota Timberwolves", "Phoenix Suns",
     "New York Knicks", "Philadelphia 76ers", "Denver Nuggets", "Los Angeles Lakers",
@@ -336,6 +326,7 @@ fun HeroItemPreview() {
     MaterialTheme {
         TeamScheduleItem(
             singleSchedule = oneSingleGame,
+            onClick = {}
         )
     }
 }
@@ -347,10 +338,40 @@ fun HeroesPreview() {
         Surface(
             color = MaterialTheme.colorScheme.background
         ) {
-            TeamScheduleList(schedule = ScheduleRepository.nbaSchedules)
+            TeamScheduleList(
+                schedule = ScheduleRepository.nbaSchedules,
+                navController = rememberNavController()
+            )
         }
     }
 }
+
+
+//这个组合函数可能没啥用了
+@Composable
+fun NbaScheduleApp(
+    viewModel: NbaScheduleViewModel = viewModel(factory = NbaScheduleViewModel.factory)
+) {
+    val navController = rememberNavController()
+    val fullSchedule by viewModel.getFullSchedule().collectAsState(emptyList())
+    lateinit var scheduleWithImage: MutableList<NbaScheduleWithImage>
+    for (schedule in fullSchedule) {
+        scheduleWithImage.add(schedule.toNbaScheduleWithImage())
+    }
+    Scaffold(
+        topBar = {
+            scheduleTopAppBar()
+        }
+    ) {
+            innerPadding ->
+        TeamScheduleList(
+            schedule = ScheduleRepository.nbaSchedules,
+            contentPadding = innerPadding,
+            navController = navController
+        )
+    }
+}
+
 
 @Preview
 @Composable

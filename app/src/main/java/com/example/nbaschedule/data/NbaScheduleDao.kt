@@ -12,7 +12,7 @@ interface NbaScheduleDao {
         ORDER BY matchTime ASC    
         """
     )
-    fun getAll(): Flow<List<NbaSchedule>>
+    fun getAllSchedule(): Flow<List<NbaSchedule>>
 
     @Query(
         """

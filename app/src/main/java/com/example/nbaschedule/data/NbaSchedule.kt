@@ -29,12 +29,22 @@ data class NbaSchedule(
     @ColumnInfo(name = "awayTeamScore")
     val awayTeamScore: Int,
 
-    @ColumnInfo(name = "homeTeamScore")
+    @ColumnInfo(name = "isFinished")
     val isFinished: Boolean,
+) {
+    fun ToNbaScheduleWithImage(): NbaScheduleWithImage {
+        return NbaScheduleWithImage(
+            id = id,
+            matchDate = matchTime.substring(5, 9),
+            matchTime = matchTime.substring(10, 15),
+            homeTeam = homeTeam,
+            awayTeam = awayTeam,
+            homeTeamScore = homeTeamScore,
+            awayTeamScore = awayTeamScore,
+            isFinished = isFinished,
+            homeTeamIcon = 0,
+            awayTeamIcon = 0
+        )
+    }
+}
 
-    @DrawableRes
-    val homeTeamIcon: Int,
-
-    @DrawableRes
-    val awayTeamIcon: Int
-)

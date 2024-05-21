@@ -3,46 +3,20 @@ package com.example.nbaschedule.data
 //import com.example.nbaschedule.NbaScheduleApplication
 
 import androidx.annotation.DrawableRes
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.nbaschedule.NbaScheduleApplication
-import com.example.nbaschedule.NbaScheduleViewModel
-import com.example.nbaschedule.R
 import com.example.nbaschedule.data.NbaScheduleRepository.fullNbaSchedule
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.runBlocking
-import kotlin.math.truncate
 
 object NbaScheduleRepository {
     val application = NbaScheduleApplication()
     val dao = application.database.nbaScheduleDao()
-    val fullSchedule = dao.getAll()
+    val fullSchedule = dao.getAllSchedule()
     val fullNbaSchedule = convert(fullSchedule)
 //    val fullNbaScheduleWithImage = toNbaScheduleWithImage(fullNbaSchedule)
 }
 
-data class NbaScheduleWithImage(
-    val id: Int,
 
-    val matchDate: String,
-
-    val matchTime: String,
-
-    val homeTeam: String,
-
-    val awayTeam: String,
-
-    val homeTeamScore: Int,
-
-    val awayTeamScore: Int,
-
-    val isFinished: Boolean,
-
-    @DrawableRes
-    val homeTeamIcon: Int,
-
-    @DrawableRes
-    val awayTeamIcon: Int
-)
 
 
 
