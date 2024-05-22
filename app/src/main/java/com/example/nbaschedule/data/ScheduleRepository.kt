@@ -475,9 +475,12 @@ object PlayerDataList {
         ),
     )
     fun getMatch(id: Int): Match {
-        return match.first {
-            it.matchId == id
+        for (match in match) {
+            if (match.matchId == id) {
+                return match
+            }
         }
+        return Match(0, emptyList(), emptyList())
     }
 }
 

@@ -2,6 +2,9 @@ package com.example.nbaschedule.ui.screens
 
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.rememberScrollableState
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,9 +16,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ButtonColors
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Scaffold
+import androidx.compose.material.TopAppBar
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -39,7 +49,10 @@ import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.compose.errorLight
+import com.example.compose.surfaceContainerHighestLight
 import com.example.nbaschedule.R
 import com.example.nbaschedule.data.Match
 import com.example.nbaschedule.data.NbaScheduleWithImage
@@ -48,81 +61,65 @@ import com.example.nbaschedule.data.PlayerData
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DetailScreen(
+    navController: NavController,
     nbaScheduleWithImage: NbaScheduleWithImage,
     match: Match
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxHeight()
-            .fillMaxWidth(),
-        verticalArrangement = Arrangement.Top,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        TopPart(nbaScheduleWithImage = nbaScheduleWithImage)
-        TextPart()
-        Card(
-            shape = RoundedCornerShape(0.dp),
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Text(text = "球员数据统计",
-                modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Center,
-                fontWeight = FontWeight.ExtraBold,
-                style = MaterialTheme.typography.h4
-                )
+    Scaffold(
+        topBar = {
+            DetailTopAppBar(
+                nbaScheduleWithImage = nbaScheduleWithImage,
+                onBackPressed = { navController.popBackStack() }
+            )
         }
-        var player: List<PlayerData> by remember {
-            mutableStateOf(match.homePlayer)
-        }
-        Card(
-            shape = RoundedCornerShape(0.dp)
+    ) {innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxHeight()
+                .fillMaxWidth(),
+            verticalArrangement = Arrangement.Top,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Row(modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Button(onClick = {
-                    if(player != match.guestPlayer)
-                        player = match.guestPlayer
-                                 },
-                    modifier = Modifier.weight(0.4f),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = errorLight)
-                ) {
-                    Text(text = nbaScheduleWithImage.awayTeam.toString())
-                }
-//                Divider()
-                Button(
-                    onClick = {
-                              if(player != match.homePlayer)
-                                  player = match.homePlayer
-                              },
-                    modifier = Modifier.weight(0.4f),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text(text = nbaScheduleWithImage.homeTeam.toString())
-                }
-            }
-        }
-
-        LazyColumn(
-        ) {
-            itemsIndexed(
-                items = player
-            ) {index, singlePlayer ->
-                PlayerDataItem(singlePlayer = singlePlayer)
-            }
+            TopPart(nbaScheduleWithImage = nbaScheduleWithImage)
+            TextPart()
+            PlayerDataPart(match = match, nbaScheduleWithImage = nbaScheduleWithImage)
         }
     }
-
 }
+//自定义新闻详细信息的顶部导航栏
+@Composable
+fun DetailTopAppBar(
+    nbaScheduleWithImage: NbaScheduleWithImage,
+    onBackPressed: () -> Unit = {}
+) {
+    TopAppBar(title = {
+        Text(text = nbaScheduleWithImage.homeTeam +
+                " vs " +
+                nbaScheduleWithImage.awayTeam,
+            fontWeight = FontWeight.ExtraBold)
+                      },
+        navigationIcon = {
+            IconButton(onClick = { onBackPressed() }) {
+                Icon(imageVector = Icons.Default.ArrowBack, "")
+            }
+        },
+        backgroundColor = surfaceContainerHighestLight
+    )
+}
+
 @Composable
 fun TopPart(nbaScheduleWithImage: NbaScheduleWithImage) {
+    var scrollState = rememberScrollState()
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .scrollable(scrollState, orientation = Orientation.Horizontal)
+            .fillMaxWidth(),
         shape = RoundedCornerShape(0.dp)
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .scrollable(scrollState, orientation = Orientation.Horizontal)
+                .fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -135,12 +132,13 @@ fun TopPart(nbaScheduleWithImage: NbaScheduleWithImage) {
                     .sizeIn(
                         minHeight = 40.dp,
                         minWidth = 40.dp,
-                        maxHeight = 80.dp,
-                        maxWidth = 80.dp
+                        maxHeight = 60.dp,
+                        maxWidth = 60.dp
                     )
                     .fillMaxWidth()
                     .fillMaxHeight()
             )
+
             Column(
                 modifier = Modifier,
                 verticalArrangement = Arrangement.Center
@@ -148,7 +146,12 @@ fun TopPart(nbaScheduleWithImage: NbaScheduleWithImage) {
 
                 Text(
                     modifier = Modifier,
-                    text = nbaScheduleWithImage.awayTeam,
+                    text = nbaScheduleWithImage.awayTeam.substringBefore(" "),
+                    style = MaterialTheme.typography.body1
+                )
+                Text(
+                    modifier = Modifier,
+                    text = nbaScheduleWithImage.awayTeam.substringAfter(" "),
                     style = MaterialTheme.typography.body1
                 )
                 Text(
@@ -156,6 +159,7 @@ fun TopPart(nbaScheduleWithImage: NbaScheduleWithImage) {
                     modifier = Modifier,
                     style = MaterialTheme.typography.body1)
             }
+
             Row(
                 modifier = Modifier.fillMaxHeight(fraction = 0.1f),
                 horizontalArrangement = Arrangement.Center,
@@ -173,19 +177,25 @@ fun TopPart(nbaScheduleWithImage: NbaScheduleWithImage) {
                     style = MaterialTheme.typography.body1)
                 Spacer(modifier = Modifier.padding(4.dp))
             }
+
             Column(
-                modifier = Modifier.fillMaxHeight(fraction = 0.1f),
+                modifier = Modifier,
                 verticalArrangement = Arrangement.Center
             ) {
 
                 Text(
-                    text = nbaScheduleWithImage.homeTeam,
+                    text = nbaScheduleWithImage.homeTeam.substringBefore(" "),
+                    style = MaterialTheme.typography.body1
+                )
+                Text(
+                    text = nbaScheduleWithImage.homeTeam.substringAfter(" "),
                     style = MaterialTheme.typography.body1
                 )
                 Text(
                     text = "主",
                     style = MaterialTheme.typography.body1)
             }
+
             Image(
                 painter = painterResource(
                     id = nbaScheduleWithImage.homeTeamIcon
@@ -195,12 +205,13 @@ fun TopPart(nbaScheduleWithImage: NbaScheduleWithImage) {
                     .sizeIn(
                         minHeight = 40.dp,
                         minWidth = 40.dp,
-                        maxHeight = 80.dp,
-                        maxWidth = 80.dp
+                        maxHeight = 60.dp,
+                        maxWidth = 60.dp
                     )
                     .fillMaxWidth()
                     .fillMaxHeight()
             )
+
         }
     }
 }
@@ -233,6 +244,89 @@ fun TextPart() {
                 style = MaterialTheme.typography.body1
             )
         }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun PlayerDataPart(
+    match: Match,
+    nbaScheduleWithImage: NbaScheduleWithImage
+) {
+    if (match.matchId != 0) {
+        Card(
+            shape = RoundedCornerShape(0.dp),
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(
+                text = "球员数据统计",
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center,
+                fontWeight = FontWeight.ExtraBold,
+                style = MaterialTheme.typography.h4
+            )
+        }
+
+        var player: List<PlayerData> by remember {
+            mutableStateOf(match.homePlayer)
+        }
+
+        Card(
+            shape = RoundedCornerShape(0.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Button(
+                    onClick = {
+                        if (player != match.guestPlayer)
+                            player = match.guestPlayer
+                    },
+                    modifier = Modifier.weight(0.4f),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = errorLight)
+                ) {
+                    Text(text = nbaScheduleWithImage.awayTeam.toString())
+                }
+//                Divider()
+                Button(
+                    onClick = {
+                        if (player != match.homePlayer)
+                            player = match.homePlayer
+                    },
+                    modifier = Modifier.weight(0.4f),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(text = nbaScheduleWithImage.homeTeam.toString())
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.padding(8.dp))
+
+        LazyColumn(
+        ) {
+            itemsIndexed(
+                items = player
+            ) { index, singlePlayer ->
+                PlayerDataItem(singlePlayer = singlePlayer)
+            }
+        }
+    } else {
+        Card(
+            onClick = { /*TODO*/ },
+            shape = RoundedCornerShape(0.dp)
+        ) {
+            Text(
+                text = "球员数据还没有统计出来哟",
+                modifier = Modifier.fillMaxWidth(),
+                style = MaterialTheme.typography.body1,
+                textAlign = TextAlign.Center,
+                fontWeight = FontWeight.ExtraBold
+            )
+        }
+
     }
 }
 
@@ -303,6 +397,7 @@ fun PlayerDataItem(singlePlayer: PlayerData) {
             }
         }
     }
+    Spacer(modifier = Modifier.padding(8.dp))
 }
 
 @Preview
@@ -338,6 +433,7 @@ fun DetailScreenPreview() {
         )
     )
     DetailScreen(
+        navController = rememberNavController(),
         nbaScheduleWithImage = nbaScheduleWithImage,
         match = match
     )

@@ -30,6 +30,7 @@ fun NbaSchedulePart() {
                 val newsId = backStackEntry.arguments?.getInt("newsId")
                     ?: error("newsId cannot be null")
                 DetailScreen(
+                    navController = navController,
                     ScheduleRepository.getMatch(newsId),
                     PlayerDataList.getMatch(newsId)
                 )
